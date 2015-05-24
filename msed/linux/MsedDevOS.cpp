@@ -32,6 +32,9 @@ along with msed.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include "MsedDevOS.h"
 #include "MsedHexDump.h"
+#ifndef _ISOC11_SOURCE
+# include <malloc.h> 
+#endif
 
 using namespace std;
 
@@ -177,7 +180,11 @@ void MsedDevOS::identify()
     LOG(D4) << "Entering MsedDevOS::identify()";
     vector<uint8_t> nullz(512, 0x00);
     if (!isOpen) return; //disk open failed so this will too
+#ifdef _ISOC11_SOURCE
     uint8_t * buffer = (uint8_t *) aligned_alloc(IO_BUFFER_ALIGNMENT, IO_BUFFER_LENGTH);
+#else
+    uint8_t * buffer = (uint8_t *) memalign(IO_BUFFER_ALIGNMENT, IO_BUFFER_LENGTH);
+#endif
     memset(buffer, 0, IO_BUFFER_LENGTH);
     if (ioctl(fd, HDIO_GET_IDENTITY, buffer) < 0) {
         LOG(E) << "Identify failed " << strerror(errno);
